@@ -1,9 +1,9 @@
 // ============================================================
-// LITTLE FOREST — state.js
+// GHIBLI FOREST — state.js
 // Central data model + localStorage persistence
 // ============================================================
 
-const STORAGE_KEY = "littleforest_v1";
+const STORAGE_KEY = "ghibliforest_v1";
 
 const CATEGORIES = {
   study:     { label: "Study",     emoji: "📚", color: "var(--cat-study)" },
@@ -61,7 +61,7 @@ function load() {
     const parsed = JSON.parse(raw);
     return Object.assign(defaultState(), parsed);
   } catch (e) {
-    console.warn("Little Forest: could not load state, starting fresh", e);
+    console.warn("Ghibli Forest: could not load state, starting fresh", e);
     return defaultState();
   }
 }
@@ -70,7 +70,7 @@ function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
-    console.warn("Little Forest: save failed", e);
+    console.warn("Ghibli Forest: save failed", e);
   }
 }
 

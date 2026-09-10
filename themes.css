@@ -1,5 +1,5 @@
 /* ============================================================
-   LITTLE FOREST — atmosphere (time of day + season)
+   GHIBLI FOREST — atmosphere (time of day + season)
    ============================================================ */
 
 body[data-time="morning"] { background: linear-gradient(180deg, #FBF6EA 0%, #F5F1E8 40%); }

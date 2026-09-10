@@ -1,5 +1,5 @@
 // ============================================================
-// LITTLE FOREST — search.js
+// GHIBLI FOREST — search.js
 // Universal search across tasks, events, reminders, journal, notes
 // ============================================================
 

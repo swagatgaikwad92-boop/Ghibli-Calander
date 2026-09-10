@@ -1,5 +1,5 @@
 // ============================================================
-// LITTLE FOREST — calendar.js
+// GHIBLI FOREST — calendar.js
 // Pure date/grid helpers for month & week views
 // ============================================================
 

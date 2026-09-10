@@ -1,5 +1,5 @@
 // ============================================================
-// LITTLE FOREST — tasks.js
+// GHIBLI FOREST — tasks.js
 // Task item markup + swipe-to-complete / swipe-to-postpone
 // ============================================================
 

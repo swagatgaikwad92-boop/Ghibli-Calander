@@ -1,21 +1,21 @@
-// Little Forest — service worker
-const CACHE = "little-forest-v1";
+// Ghibli Forest — service worker
+const CACHE = "ghibli-forest-v1";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./styles/core.css",
-  "./styles/components.css",
-  "./styles/themes.css",
-  "./scripts/state.js",
-  "./scripts/companion.js",
-  "./scripts/calendar.js",
-  "./scripts/render.js",
-  "./scripts/tasks.js",
-  "./scripts/search.js",
-  "./scripts/app.js",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./core.css",
+  "./components.css",
+  "./themes.css",
+  "./state.js",
+  "./companion.js",
+  "./calendar.js",
+  "./render.js",
+  "./tasks.js",
+  "./search.js",
+  "./app.js",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", (e) => {

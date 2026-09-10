@@ -1,5 +1,5 @@
 // ============================================================
-// LITTLE FOREST — companion.js
+// GHIBLI FOREST — companion.js
 // Tiny original woodland spirit — SVG based, reactive expressions
 // ============================================================
 

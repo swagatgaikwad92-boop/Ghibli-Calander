@@ -1,5 +1,5 @@
 // ============================================================
-// LITTLE FOREST — render.js
+// GHIBLI FOREST — render.js
 // Builds the dynamic markup for every screen from LF state
 // ============================================================
 

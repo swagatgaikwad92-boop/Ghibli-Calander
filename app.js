@@ -1,5 +1,5 @@
 // ============================================================
-// LITTLE FOREST — app.js
+// GHIBLI FOREST — app.js
 // Wiring: navigation, sheets, forms, timers, PWA install
 // ============================================================
 
