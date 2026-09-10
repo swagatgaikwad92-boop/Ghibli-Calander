@@ -1,0 +1,35 @@
+/* ============================================================
+   LITTLE FOREST — atmosphere (time of day + season)
+   ============================================================ */
+
+body[data-time="morning"] { background: linear-gradient(180deg, #FBF6EA 0%, #F5F1E8 40%); }
+body[data-time="afternoon"] { background: linear-gradient(180deg, #F7F4EC 0%, #F5F1E8 40%); }
+body[data-time="evening"] { background: linear-gradient(180deg, #F7E8D9 0%, #F5EDE0 45%, #F5F1E8 100%); }
+body[data-time="night"] { background: linear-gradient(180deg, #1B211C 0%, #202720 45%, #1B211C 100%); }
+
+.atmo-particles {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.atmo-particles span {
+  position: absolute; bottom: -10px; font-size: 13px; opacity: 0;
+  animation: floatUp linear infinite;
+}
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateY(0) translateX(0) rotate(0deg); }
+  10% { opacity: 0.55; }
+  90% { opacity: 0.4; }
+  100% { opacity: 0; transform: translateY(-100vh) translateX(14px) rotate(60deg); }
+}
+
+body[data-time="night"] .atmo-particles span { color: #EAE6D9; opacity: 0.5; }
+
+/* seasonal accent tint on the hero card only — core UI stays consistent */
+body[data-season="spring"] .companion-wrap { filter: hue-rotate(0deg); }
+body[data-season="autumn"] .hero { color: var(--ink); }
+body[data-season="autumn"] .card.season-tint { border-color: rgba(193,123,74,0.25); }
+body[data-season="winter"] .atmo-particles span { color: #cfe0ea; }
+
+@media (prefers-reduced-motion: reduce) {
+  .atmo-particles { display: none; }
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
