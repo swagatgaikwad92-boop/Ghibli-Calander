@@ -381,12 +381,13 @@
   $("#saveEvent").addEventListener("click", () => {
     const title = $("#eventTitle").value.trim();
     if (!title) { toast("Give it a little name first 🌱"); return; }
-    const ev = LF.addEvent({
+    const ev = DABSyCore.createCalendarEvent({
       title, date: $("#eventDate").value || LF.todayKey(),
       startTime: $("#eventStart").value || null,
       endTime: $("#eventEnd").value || null,
       category: pendingCategory.event,
       notes: $("#eventNotes").value.trim(),
+      source: "calendar",
     });
     closeAllSheets();
     toast("Planted 🌱 — event added");
@@ -501,7 +502,7 @@
   // ---------------------------------------------------------
   // Settings
   // ---------------------------------------------------------
-  $("#btnSettings").addEventListener("click", () => { syncSettingsUI(); openSheet("#sheetSettings"); });
+  $("#btnSettings").addEventListener("click", () => { syncSettingsUI(); syncConnectionStatusUI(); openSheet("#sheetSettings"); });
   function syncSettingsUI() {
     $("#themeSelect").value = LF.state.settings.theme;
     $("#reminderStyleSelect").value = LF.state.settings.reminderStyle;
@@ -598,6 +599,34 @@
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("sw.js").catch((err) => console.warn("SW registration failed", err));
     });
+  }
+
+  // ---------------------------------------------------------
+  // DABSy Core — receive live sync from DABSy (or another tab)
+  // ---------------------------------------------------------
+  DABSyCore.subscribe((type, payload) => {
+    if (type.indexOf("calendar.") !== 0) return; // ignore connections.changed etc. here
+    refreshVisibleScreen();
+    const id = payload && payload.event ? payload.event.id : null;
+    if (id) {
+      // subtle "this just arrived" glow — no giant sync toast, per the design brief
+      requestAnimationFrame(() => {
+        const el = document.querySelector(`.tl-item[data-id="${id}"]`);
+        if (el) {
+          el.classList.add("sync-in");
+          setTimeout(() => el.classList.remove("sync-in"), 700);
+        }
+      });
+    }
+  });
+
+  function syncConnectionStatusUI() {
+    const row = $("#dabsyConnectionRow");
+    if (!row) return;
+    const conn = DABSyCore.getConnections().calendar;
+    row.textContent = conn.enabled
+      ? `🧠 Connected to DABSy (${conn.level})`
+      : "🧠 Not connected to DABSy";
   }
 
   // ---------------------------------------------------------

@@ -354,6 +354,9 @@
     <div><div class="tr-label">Ambient sound</div><div class="tr-sub">Soft forest ambience while you work</div></div>
     <button class="switch" id="toggleSound"></button>
   </div>
+  <div class="toggle-row">
+    <div><div class="tr-label">DABSy connection</div><div class="tr-sub" id="dabsyConnectionRow">🧠 Not connected to DABSy</div></div>
+  </div>
   <div id="installRow" class="toggle-row" style="display:none;">
     <div><div class="tr-label">Install Ghibli Forest</div><div class="tr-sub">Add to your home screen</div></div>
     <button class="btn btn-primary btn-sm" id="installBtn">Install</button>
@@ -363,6 +366,7 @@
   </div>
 </div>
 
+<script src="dabsy-core.js"></script>
 <script src="state.js"></script>
 <script src="calendar.js"></script>
 <script src="companion.js"></script>

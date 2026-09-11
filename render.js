@@ -61,7 +61,7 @@ const Render = (() => {
       }
 
       html += `
-        <div class="tl-item ${isPast ? "past" : ""} ${isNow ? "now" : ""}" style="--cat-color:${cat.color}">
+        <div class="tl-item ${isPast ? "past" : ""} ${isNow ? "now" : ""}" data-id="${it.id}" style="--cat-color:${cat.color}">
           <div class="tl-time">${LFCal.fmtTime(it.time)}</div>
           <div class="tl-card glass">
             <span class="emoji">${cat.emoji}</span>

@@ -1,5 +1,5 @@
 // Ghibli Forest — service worker
-const CACHE = "ghibli-forest-v1";
+const CACHE = "ghibli-forest-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS = [
   "./core.css",
   "./components.css",
   "./themes.css",
+  "./dabsy-core.js",
   "./state.js",
   "./companion.js",
   "./calendar.js",

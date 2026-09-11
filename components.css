@@ -57,6 +57,12 @@
 }
 .tl-item.past { opacity: 0.42; }
 .tl-item.now { }
+.tl-item.sync-in .tl-card { animation: syncGlow var(--dur-slow) var(--ease-smooth); }
+@keyframes syncGlow {
+  0% { opacity: 0; transform: translateX(-8px); box-shadow: 0 0 0 2px var(--cat-color, var(--sage)), var(--glass-shadow); }
+  60% { opacity: 1; transform: translateX(0); box-shadow: 0 0 0 2px var(--cat-color, var(--sage)), var(--glass-shadow); }
+  100% { box-shadow: var(--glass-shadow); }
+}
 .tl-item.now .tl-card { box-shadow: 0 0 0 2px var(--cat-color, var(--sage)), var(--glass-shadow); }
 .tl-time { font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; margin-bottom: 4px; }
 .tl-card { padding: 10px 13px; display: flex; align-items: center; gap: 9px; border-radius: var(--r-md); }

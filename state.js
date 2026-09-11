@@ -90,7 +90,19 @@ function tasksOn(dateKey) {
 
 function addEvent(ev) {
   ev.id = uid();
+  const now = new Date().toISOString();
+  if (!ev.source) ev.source = "calendar";
+  if (!ev.createdAt) ev.createdAt = now;
+  ev.updatedAt = now;
   state.events.push(ev);
+  save();
+  return ev;
+}
+function updateEvent(id, patch) {
+  const ev = state.events.find((x) => x.id === id);
+  if (!ev) return null;
+  Object.assign(ev, patch);
+  ev.updatedAt = new Date().toISOString();
   save();
   return ev;
 }
@@ -165,7 +177,7 @@ function overdueTasks(dateKey) {
 
 window.LF = {
   state, save, load, uid, todayKey, getDay, eventsOn, tasksOn,
-  addEvent, addTask, addReminder, toggleTask, removeItem, moveTaskToDate,
+  addEvent, updateEvent, addTask, addReminder, toggleTask, removeItem, moveTaskToDate,
   bumpStreak, findConflicts, overdueTasks, toMinutes,
   CATEGORIES, MOODS,
 };
