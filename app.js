@@ -605,7 +605,7 @@
   // DABSy Core — receive live sync from DABSy (or another tab)
   // ---------------------------------------------------------
   DABSyCore.subscribe((type, payload) => {
-    if (type.indexOf("calendar.") !== 0) return; // ignore connections.changed etc. here
+    if (type.indexOf("calendar.") !== 0 && type !== "task.deleted") return; // ignore connections.changed etc. here
     refreshVisibleScreen();
     const id = payload && payload.event ? payload.event.id : null;
     if (id) {
