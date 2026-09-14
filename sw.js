@@ -1,5 +1,5 @@
 // Ghibli Forest — service worker
-const CACHE = "ghibli-forest-v2";
+const CACHE = "ghibli-forest-v3";
 const ASSETS = [
   "./",
   "./index.html",

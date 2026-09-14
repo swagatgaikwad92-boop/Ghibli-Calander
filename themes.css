@@ -7,6 +7,14 @@ body[data-time="afternoon"] { background: linear-gradient(180deg, #F7F4EC 0%, #F
 body[data-time="evening"] { background: linear-gradient(180deg, #F7E8D9 0%, #F5EDE0 45%, #F5F1E8 100%); }
 body[data-time="night"] { background: linear-gradient(180deg, #1B211C 0%, #202720 45%, #1B211C 100%); }
 
+/* Dark mode ("Always dark", or auto after sundown) — these win over the
+   light gradients above regardless of which time-of-day bucket it is,
+   so the app is actually dark instead of dark cards on a light backdrop. */
+[data-theme="night"] body[data-time="morning"] { background: linear-gradient(180deg, #191F1D 0%, #1E2620 45%, #1B211C 100%); }
+[data-theme="night"] body[data-time="afternoon"] { background: linear-gradient(180deg, #1A201B 0%, #1D241E 45%, #1B211C 100%); }
+[data-theme="night"] body[data-time="evening"] { background: linear-gradient(180deg, #201C19 0%, #241F1B 45%, #1B211C 100%); }
+[data-theme="night"] body[data-time="night"] { background: linear-gradient(180deg, #1B211C 0%, #202720 45%, #1B211C 100%); }
+
 .atmo-particles {
   position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
 }
