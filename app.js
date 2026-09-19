@@ -61,7 +61,7 @@
     $("#progressFill").style.width = tasks.length ? `${Math.round((done / tasks.length) * 100)}%` : "0%";
 
     Render.taskList($("#todayTasks"), tasks, {
-      onComplete: (id) => { LF.toggleTask(id); Companion.celebrate(); renderToday(); },
+      onComplete: (id) => { const t = LF.toggleTask(id); Companion.celebrate(); if (t && t.done) Engine.onTaskCompleted(id); renderToday(); },
       onPostpone: (id) => { postponeToTomorrow(id); renderToday(); },
       onExpand: () => {},
     });
@@ -140,7 +140,7 @@
     Render.timeline($("#dayTimeline"), dateKey);
 
     Render.taskList($("#dayTasks"), LF.tasksOn(dateKey), {
-      onComplete: (id) => { LF.toggleTask(id); Companion.celebrate(); openDayDetail(dateKey); },
+      onComplete: (id) => { const t = LF.toggleTask(id); Companion.celebrate(); if (t && t.done) Engine.onTaskCompleted(id); openDayDetail(dateKey); },
       onPostpone: (id) => { LF.moveTaskToDate(id, nextDay(dateKey)); openDayDetail(dateKey); },
       onExpand: () => {},
     });
@@ -180,7 +180,7 @@
     list.sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
 
     Render.taskList($("#taskListAll"), list, {
-      onComplete: (id) => { LF.toggleTask(id); Companion.celebrate(); renderTasksScreen(filter); },
+      onComplete: (id) => { const t = LF.toggleTask(id); Companion.celebrate(); if (t && t.done) Engine.onTaskCompleted(id); renderTasksScreen(filter); },
       onPostpone: (id) => {
         const t = LF.state.tasks.find((x) => x.id === id);
         if (t) LF.moveTaskToDate(id, nextDay(t.date || today));
@@ -503,7 +503,7 @@
   // ---------------------------------------------------------
   // Settings
   // ---------------------------------------------------------
-  $("#btnSettings").addEventListener("click", () => { syncSettingsUI(); syncConnectionStatusUI(); syncNotifUI(); openSheet("#sheetSettings"); });
+  $("#btnSettings").addEventListener("click", () => { syncSettingsUI(); syncConnectionStatusUI(); syncNotifUI(); syncNotifCategoryUI(); openSheet("#sheetSettings"); });
   function syncSettingsUI() {
     $("#themeSelect").value = LF.state.settings.theme;
     $("#reminderStyleSelect").value = LF.state.settings.reminderStyle;
@@ -548,6 +548,18 @@
     else if (result === "denied") toast("No worries — you can turn these on later in your browser settings");
     syncNotifUI();
   });
+
+  function syncNotifCategoryUI() {
+    const cats = LF.state.settings.notifCategories;
+    $$('[data-notifcat]').forEach((btn) => btn.classList.toggle("on", cats[btn.dataset.notifcat] !== false));
+  }
+  $$('[data-notifcat]').forEach((btn) => btn.addEventListener("click", () => {
+    const key = btn.dataset.notifcat;
+    const cats = LF.state.settings.notifCategories;
+    cats[key] = cats[key] === false ? true : false;
+    LF.save();
+    btn.classList.toggle("on", cats[key] !== false);
+  }));
   $("#themeSelect").addEventListener("change", (e) => { LF.state.settings.theme = e.target.value; LF.save(); applyAtmosphere(); });
   $("#reminderStyleSelect").addEventListener("change", (e) => { LF.state.settings.reminderStyle = e.target.value; LF.save(); });
   $("#toggleReducedMotion").addEventListener("click", (e) => {
@@ -691,16 +703,26 @@
 
     showScreen("today");
     checkReminders(); // catch up immediately on open, don't wait 20s
+    Engine.tick();
 
     // If we were launched from a tapped notification (or one arrives while
-    // this tab is already open), jump straight to that day — after the
-    // default Today screen has rendered, so it visibly overrides it.
-    Notify.listenForNavigation((day) => openDayDetail(day));
+    // this tab is already open), jump straight to the right place — after
+    // the default Today screen has rendered, so it visibly overrides it.
+    Notify.listenForActions({
+      onOpenDay: (day) => openDayDetail(day),
+      onOpenScreen: (screen) => showScreen(screen),
+      onMarkDone: (taskId) => {
+        const t = LF.toggleTask(taskId);
+        if (t && t.done) { Companion.celebrate(); Engine.onTaskCompleted(taskId); }
+        refreshVisibleScreen();
+        toast("✨ One more leaf on today's tree.");
+      },
+    });
 
     setInterval(() => { applyAtmosphere(); renderToday(); if (currentScreen === "calendar") renderCalendarScreen(); }, 60000);
-    setInterval(checkReminders, 20000);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) checkReminders(); });
-    window.addEventListener("focus", checkReminders);
+    setInterval(() => { checkReminders(); Engine.tick(); }, 20000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) { checkReminders(); Engine.tick(); } });
+    window.addEventListener("focus", () => { checkReminders(); Engine.tick(); });
   }
 
   document.addEventListener("DOMContentLoaded", init);

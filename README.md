@@ -143,6 +143,46 @@ during a background sync — it never touches your `localStorage` data
 directly, and your reminders array in `localStorage` stays the single
 source of truth (IndexedDB is just a read mirror for the SW).
 
+## Notification personality upgrade (new files: `voice.js`, `engine.js`)
+
+Reminders no longer say "Reminder: Study Physics at 5:30 PM." Instead:
+
+- **`voice.js`** — the wording layer. A pool of several rotating,
+  in-character lines per situation (upcoming, starting now, remaining
+  tasks, progress, next-up, overdue, completion, morning briefing,
+  evening wrap-up, streaks, "forest memory"). It picks from the pool each
+  time and avoids repeating the exact same line twice in a row. Always
+  uses your task/event's own title — never generic.
+- **`engine.js`** — the decision layer. Reads your actual events/tasks
+  each check and decides *if* a notification is warranted, using a
+  dedupe log (`LF.state.notifyLog`, auto-pruned after 3 days) so nothing
+  repeats within the same day. Runs on the same cadence as before (every
+  ~20s while open, instantly on reopen/focus) — the reliability tiers
+  below don't change.
+- **Settings → Notifications** now has seven individually toggleable
+  categories (morning briefing, upcoming, starting, remaining/progress,
+  overdue, evening wrap-up, completion) — all on by default, stored in
+  `LF.state.settings.notifCategories`.
+- **Notification actions**, where the browser supports them: upcoming/
+  starting/morning/evening get an **Open Calendar** action; remaining-
+  tasks gets **View Tasks**; overdue gets **Mark Done** (actually marks
+  the task complete, via a message to the open app or a `?markDone=` URL
+  param if the app had to open fresh). Platforms without action support
+  (iOS Safari) just fall back to a normal tap-to-open.
+- Fixed default check windows: morning briefing 8–11am, remaining-tasks
+  nudge from 1pm, progress update 5–9pm, evening wrap-up from 9pm — not
+  user-configurable yet, just the on/off toggles are. Say the word if
+  you'd like a time picker added later.
+
+**Scope note on the closed-app (tier C) path:** the best-effort Periodic
+Background Sync in `sw.js` still uses the simpler plain-reminder check,
+not the full Voice/Engine personality. Duplicating this much
+context-aware logic inside the service worker — which can only see an
+IndexedDB mirror, not your live app state — would add real complexity to
+a path that isn't guaranteed to run on most browsers anyway. Tiers A
+(open) and B (backgrounded) get the full creative system; tier C keeps
+working, just with simpler wording, until true Web Push is worth adding.
+
 ## Editing later
 
 Everything is one small file per concern, so most changes only touch one

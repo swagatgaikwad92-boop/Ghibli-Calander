@@ -358,6 +358,37 @@
     <div><div class="tr-label">Notifications</div><div class="tr-sub" id="notifStatusRow">Get reminders even when the app is closed</div></div>
     <button class="btn btn-primary btn-sm" id="notifBtn">Enable</button>
   </div>
+  <div id="notifCatBlock" style="padding:2px 4px 10px;">
+    <div class="tr-sub" style="margin-bottom:6px;">Your forest companion can nudge you about:</div>
+    <div class="toggle-row" style="padding:9px 0;">
+      <div class="tr-label" style="font-size:13px;">☀️ Morning briefing</div>
+      <button class="switch" data-notifcat="morning"></button>
+    </div>
+    <div class="toggle-row" style="padding:9px 0;">
+      <div class="tr-label" style="font-size:13px;">🌿 Upcoming task/event</div>
+      <button class="switch" data-notifcat="upcoming"></button>
+    </div>
+    <div class="toggle-row" style="padding:9px 0;">
+      <div class="tr-label" style="font-size:13px;">🌱 Task starting now</div>
+      <button class="switch" data-notifcat="starting"></button>
+    </div>
+    <div class="toggle-row" style="padding:9px 0;">
+      <div class="tr-label" style="font-size:13px;">🍃 Remaining tasks / progress</div>
+      <button class="switch" data-notifcat="remaining"></button>
+    </div>
+    <div class="toggle-row" style="padding:9px 0;">
+      <div class="tr-label" style="font-size:13px;">🍂 Overdue nudges</div>
+      <button class="switch" data-notifcat="overdue"></button>
+    </div>
+    <div class="toggle-row" style="padding:9px 0;">
+      <div class="tr-label" style="font-size:13px;">🌙 Evening wrap-up</div>
+      <button class="switch" data-notifcat="evening"></button>
+    </div>
+    <div class="toggle-row" style="padding:9px 0; border-bottom:none;">
+      <div class="tr-label" style="font-size:13px;">✨ Completion celebrations</div>
+      <button class="switch" data-notifcat="completion"></button>
+    </div>
+  </div>
   <div class="toggle-row">
     <div><div class="tr-label">DABSy connection</div><div class="tr-sub" id="dabsyConnectionRow">🧠 Not connected to DABSy</div></div>
   </div>
@@ -378,6 +409,8 @@
 <script src="search.js"></script>
 <script src="render.js"></script>
 <script src="notify.js"></script>
+<script src="voice.js"></script>
+<script src="engine.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

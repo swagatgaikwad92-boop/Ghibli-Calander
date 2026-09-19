@@ -79,20 +79,23 @@ const Notify = (() => {
   }
 
   // ---- showing a real notification (works while backgrounded, not just foreground) ----
-  async function fire(title, body, day) {
+  async function fire(title, body, day, opts = {}) {
     if (permission() !== "granted") return false;
+    const options = {
+      body,
+      icon: "icon-192.png",
+      badge: "icon-192.png",
+      tag: opts.tag || "ghibli-forest-reminder",
+      renotify: !!opts.renotify,
+      data: { day: day || null, taskId: opts.taskId || null, kind: opts.kind || null },
+    };
+    if (opts.actions && opts.actions.length) options.actions = opts.actions; // ignored gracefully where unsupported (e.g. iOS)
     try {
       const reg = await navigator.serviceWorker.ready;
-      await reg.showNotification(title, {
-        body,
-        icon: "icon-192.png",
-        badge: "icon-192.png",
-        tag: "ghibli-forest-reminder",
-        data: { day: day || null },
-      });
+      await reg.showNotification(title, options);
       return true;
     } catch (e) {
-      // fall back to a page-level Notification if SW isn't ready yet
+      // fall back to a page-level Notification if SW isn't ready yet (no actions support here)
       try { new Notification(title, { body, icon: "icon-192.png" }); return true; } catch (e2) { return false; }
     }
   }
@@ -121,24 +124,31 @@ const Notify = (() => {
     } catch (e) { return "unsupported"; }
   }
 
-  // ---- navigation when a notification is tapped ----
-  function listenForNavigation(onNavigateDay) {
-    if (!("serviceWorker" in navigator)) return;
-    navigator.serviceWorker.addEventListener("message", (event) => {
-      if (event.data && event.data.type === "open-day" && event.data.day) {
-        onNavigateDay(event.data.day);
-      }
-    });
-    // handle the case where the app was opened fresh via ?day=... from the SW
+  // ---- navigation / actions when a notification is tapped ----
+  function listenForActions(handlers) {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        const d = event.data || {};
+        if (d.type === "open-day" && d.day && handlers.onOpenDay) handlers.onOpenDay(d.day);
+        if (d.type === "mark-done" && d.taskId && handlers.onMarkDone) handlers.onMarkDone(d.taskId);
+        if (d.type === "open-screen" && d.screen && handlers.onOpenScreen) handlers.onOpenScreen(d.screen);
+      });
+    }
+    // handle the case where the app was opened fresh (not just focused)
+    // via a notification tap, using URL params the SW attaches
     const params = new URLSearchParams(location.search);
     const day = params.get("day");
-    if (day) onNavigateDay(day);
+    const markDone = params.get("markDone");
+    const screen = params.get("screen");
+    if (day && handlers.onOpenDay) handlers.onOpenDay(day);
+    if (markDone && handlers.onMarkDone) handlers.onMarkDone(markDone);
+    if (screen && handlers.onOpenScreen) handlers.onOpenScreen(screen);
   }
 
   return {
     supported, permission, requestPermission, fire,
     mirrorReminders, reconcileFromDB, registerPeriodicSync, backgroundSyncStatus,
-    listenForNavigation,
+    listenForActions,
   };
 })();
 

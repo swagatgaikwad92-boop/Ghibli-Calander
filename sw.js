@@ -1,5 +1,5 @@
 // Ghibli Forest — service worker
-const CACHE = "ghibli-forest-v4";
+const CACHE = "ghibli-forest-v5";
 const ASSETS = [
   "./",
   "./index.html",
@@ -15,6 +15,8 @@ const ASSETS = [
   "./tasks.js",
   "./search.js",
   "./notify.js",
+  "./voice.js",
+  "./engine.js",
   "./app.js",
   "./icon-192.png",
   "./icon-512.png"
@@ -57,15 +59,34 @@ self.addEventListener("fetch", (e) => {
 // ============================================================
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+  const action = event.action || "";
   const day = event.notification.data && event.notification.data.day;
-  const targetUrl = day ? `./index.html?day=${day}` : "./index.html";
+
+  let messageType = "open-day";
+  let messagePayload = { day };
+  let targetUrl = day ? `./index.html?day=${day}` : "./index.html";
+
+  if (action.startsWith("mark-done:")) {
+    const taskId = action.slice("mark-done:".length);
+    messageType = "mark-done";
+    messagePayload = { taskId };
+    targetUrl = `./index.html?markDone=${taskId}`;
+  } else if (action === "view-tasks") {
+    messageType = "open-screen";
+    messagePayload = { screen: "tasks" };
+    targetUrl = `./index.html?screen=tasks`;
+  } else if (action === "open-calendar") {
+    messageType = "open-day";
+    messagePayload = { day };
+    targetUrl = day ? `./index.html?day=${day}` : `./index.html?screen=calendar`;
+  }
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
         if ("focus" in client) {
           client.focus();
-          if (day) client.postMessage({ type: "open-day", day });
+          client.postMessage(Object.assign({ type: messageType }, messagePayload));
           return;
         }
       }

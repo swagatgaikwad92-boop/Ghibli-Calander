@@ -42,6 +42,15 @@ function defaultState() {
       reducedMotion: false,
       reminderStyle: "cozy", // minimal | cozy | quiet | off
       soundOn: false,
+      notifCategories: {
+        morning: true,     // morning briefing
+        upcoming: true,    // "starts in 30 min"
+        starting: true,    // "it's time"
+        remaining: true,   // midday nudge about what's left
+        overdue: true,     // gentle overdue nudge
+        evening: true,     // evening wrap-up / day story
+        completion: true,  // completion + next-up celebrations
+      },
     },
     events: [],     // {id, title, date, startTime, endTime, category, notes, repeat}
     tasks: [],      // {id, title, date, time, category, priority, notes, deadline, duration, done, doneAt, subtasks:[{id,title,done}]}
@@ -49,6 +58,7 @@ function defaultState() {
     days: {},       // dateKey -> {mood, intention, notes, journal:{felt,littleThings,tinyWin,favMoment,energy}, capsule}
     streak: { count: 0, lastActiveDate: null },
     companion: { mood: "content" },
+    notifyLog: {},  // "type:itemId:dateKey" -> timestamp fired, for spam prevention (pruned after 2 days)
   };
 }
 
@@ -59,7 +69,16 @@ function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw);
-    return Object.assign(defaultState(), parsed);
+    const merged = Object.assign(defaultState(), parsed);
+    // shallow Object.assign above would drop new default keys nested inside
+    // settings (e.g. notifCategories) if an older save predates them
+    merged.settings = Object.assign(defaultState().settings, parsed.settings || {});
+    merged.settings.notifCategories = Object.assign(
+      defaultState().settings.notifCategories,
+      (parsed.settings && parsed.settings.notifCategories) || {}
+    );
+    merged.notifyLog = (parsed && parsed.notifyLog) || {};
+    return merged;
   } catch (e) {
     console.warn("Ghibli Forest: could not load state, starting fresh", e);
     return defaultState();
@@ -175,9 +194,27 @@ function overdueTasks(dateKey) {
   return tasksOn(dateKey).filter((t) => !t.done && t.deadline && t.deadline < dateKey);
 }
 
+// ---- notification dedupe log (prevents re-sending the same nudge) ----
+function wasNotified(key) {
+  return !!state.notifyLog[key];
+}
+function markNotified(key) {
+  state.notifyLog[key] = Date.now();
+  save();
+}
+function pruneNotifyLog() {
+  const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1000; // keep 3 days
+  let changed = false;
+  Object.keys(state.notifyLog).forEach((k) => {
+    if (state.notifyLog[k] < cutoff) { delete state.notifyLog[k]; changed = true; }
+  });
+  if (changed) save();
+}
+
 window.LF = {
   state, save, load, uid, todayKey, getDay, eventsOn, tasksOn,
   addEvent, updateEvent, addTask, addReminder, toggleTask, removeItem, moveTaskToDate,
   bumpStreak, findConflicts, overdueTasks, toMinutes,
+  wasNotified, markNotified, pruneNotifyLog,
   CATEGORIES, MOODS,
 };
