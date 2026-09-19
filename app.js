@@ -409,6 +409,7 @@
     const date = $("#remDate").value || LF.todayKey();
     const time = $("#remTime").value || "09:00";
     LF.addReminder({ title, datetime: `${date}T${time}`, offsetMinutes: parseInt($("#remOffset").value, 10) || 0 });
+    Notify.mirrorReminders();
     closeAllSheets();
     toast("Planted 🌱 — reminder set");
   });
@@ -502,13 +503,51 @@
   // ---------------------------------------------------------
   // Settings
   // ---------------------------------------------------------
-  $("#btnSettings").addEventListener("click", () => { syncSettingsUI(); syncConnectionStatusUI(); openSheet("#sheetSettings"); });
+  $("#btnSettings").addEventListener("click", () => { syncSettingsUI(); syncConnectionStatusUI(); syncNotifUI(); openSheet("#sheetSettings"); });
   function syncSettingsUI() {
     $("#themeSelect").value = LF.state.settings.theme;
     $("#reminderStyleSelect").value = LF.state.settings.reminderStyle;
     $("#toggleReducedMotion").classList.toggle("on", LF.state.settings.reducedMotion);
     $("#toggleSound").classList.toggle("on", LF.state.settings.soundOn);
   }
+
+  // ---------------------------------------------------------
+  // Notifications settings row
+  // ---------------------------------------------------------
+  async function syncNotifUI() {
+    const row = $("#notifStatusRow");
+    const btn = $("#notifBtn");
+    if (!Notify.supported()) {
+      row.textContent = "Not supported in this browser";
+      btn.style.display = "none";
+      return;
+    }
+    const perm = Notify.permission();
+    if (perm === "granted") {
+      const bg = await Notify.backgroundSyncStatus();
+      row.textContent = bg === "granted"
+        ? "Enabled — background delivery available"
+        : "Enabled — reliable while the app is open or backgrounded";
+      btn.textContent = "Enabled";
+      btn.disabled = true;
+      btn.classList.remove("btn-primary");
+      btn.classList.add("btn-ghost");
+    } else if (perm === "denied") {
+      row.textContent = "Blocked — re-enable in your browser's site settings";
+      btn.style.display = "none";
+    } else {
+      row.textContent = "Get reminders even when the app is closed";
+      btn.style.display = "";
+      btn.textContent = "Enable";
+      btn.disabled = false;
+    }
+  }
+  $("#notifBtn").addEventListener("click", async () => {
+    const result = await Notify.requestPermission();
+    if (result === "granted") toast("Notifications on 🔔");
+    else if (result === "denied") toast("No worries — you can turn these on later in your browser settings");
+    syncNotifUI();
+  });
   $("#themeSelect").addEventListener("change", (e) => { LF.state.settings.theme = e.target.value; LF.save(); applyAtmosphere(); });
   $("#reminderStyleSelect").addEventListener("change", (e) => { LF.state.settings.reminderStyle = e.target.value; LF.save(); });
   $("#toggleReducedMotion").addEventListener("click", (e) => {
@@ -555,20 +594,26 @@
   // Reminders — foreground timer check
   // ---------------------------------------------------------
   function checkReminders() {
-    if (LF.state.settings.reminderStyle === "off") return;
-    const now = new Date();
-    LF.state.reminders.forEach((r) => {
-      if (r.fired) return;
-      const target = new Date(r.datetime);
-      target.setMinutes(target.getMinutes() - (r.offsetMinutes || 0));
-      if (now >= target) {
-        r.fired = true;
-        speakReminder(r.title);
-      }
+    // Pull in any "fired" flags the service worker set while we were away
+    // (background periodic sync), so we never double-fire on reopen.
+    Notify.reconcileFromDB().then(() => {
+      if (LF.state.settings.reminderStyle === "off") return;
+      const now = new Date();
+      let changed = false;
+      LF.state.reminders.forEach((r) => {
+        if (r.fired) return;
+        const target = new Date(r.datetime);
+        target.setMinutes(target.getMinutes() - (r.offsetMinutes || 0));
+        if (now >= target) {
+          r.fired = true;
+          changed = true;
+          speakReminder(r.title, (r.datetime || "").slice(0, 10));
+        }
+      });
+      if (changed) { LF.save(); Notify.mirrorReminders(); }
     });
-    LF.save();
   }
-  function speakReminder(title) {
+  function speakReminder(title, day) {
     const style = LF.state.settings.reminderStyle;
     let msg;
     if (style === "minimal") msg = title;
@@ -577,6 +622,9 @@
     toast(msg);
     Companion.setMood("curious");
     setTimeout(() => Companion.reactToHour(new Date().getHours()), 2500);
+    // also raise a real OS-level notification — visible even if this tab
+    // isn't focused, and tappable to jump straight to that day
+    if (Notify.permission() === "granted") Notify.fire(msg, "Tap to open Ghibli Forest.", day);
   }
 
   // ---------------------------------------------------------
@@ -636,9 +684,23 @@
     document.body.classList.toggle("reduced-motion", LF.state.settings.reducedMotion);
     Companion.mount($("#companionMount"));
     applyAtmosphere();
+
+    // Notifications: seed the SW's IndexedDB mirror, pick up any reminders
+    // the SW already fired while we were away.
+    Notify.mirrorReminders();
+
     showScreen("today");
+    checkReminders(); // catch up immediately on open, don't wait 20s
+
+    // If we were launched from a tapped notification (or one arrives while
+    // this tab is already open), jump straight to that day — after the
+    // default Today screen has rendered, so it visibly overrides it.
+    Notify.listenForNavigation((day) => openDayDetail(day));
+
     setInterval(() => { applyAtmosphere(); renderToday(); if (currentScreen === "calendar") renderCalendarScreen(); }, 60000);
     setInterval(checkReminders, 20000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) checkReminders(); });
+    window.addEventListener("focus", checkReminders);
   }
 
   document.addEventListener("DOMContentLoaded", init);

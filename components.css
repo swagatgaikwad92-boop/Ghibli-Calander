@@ -6,7 +6,7 @@
 .topbar {
   position: sticky; top: 0; z-index: 5;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 18px 6px;
+  padding: calc(14px + env(safe-area-inset-top)) 18px 6px;
 }
 .topbar .brand { display: flex; align-items: center; gap: 8px; }
 .topbar .brand svg { width: 26px; height: 26px; }
@@ -133,7 +133,7 @@
 
 /* ---------- Floating nav ---------- */
 .floatnav {
-  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%);
   width: min(94%, 520px); z-index: 20;
   display: flex; align-items: center; justify-content: space-around;
   padding: 9px 10px; border-radius: var(--r-pill);
@@ -150,7 +150,7 @@
 
 /* ---------- Plant Something FAB ---------- */
 .plant-fab {
-  position: fixed; right: 18px; bottom: 92px; z-index: 21;
+  position: fixed; right: 18px; bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 21;
   width: 58px; height: 58px; border-radius: 50%;
   background: linear-gradient(160deg, var(--sage), var(--sage-deep));
   box-shadow: 0 10px 24px rgba(91,112,82,0.4);
@@ -160,7 +160,7 @@
 .plant-fab:active { transform: scale(0.9) rotate(8deg); }
 .plant-fab svg { width: 25px; height: 25px; stroke: white; }
 .plant-menu {
-  position: fixed; right: 18px; bottom: 92px; z-index: 22;
+  position: fixed; right: 18px; bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 22;
   display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
   pointer-events: none;
 }

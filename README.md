@@ -80,6 +80,69 @@ sent anywhere.
 Once installed, it opens full-screen with no browser bar, and works
 offline.
 
+## What changed in this update
+
+Nothing about the Ghibli aesthetic, calendar, tasks, Day Log, Forest,
+search, mascot, animations, glassmorphism, DABSy sync, or your existing
+saved data was touched. Two things were added on top:
+
+### 1. Standalone PWA fixes
+
+- `manifest.json` gained `id`, `lang`, `categories`, and
+  `display_override: ["standalone","minimal-ui","browser"]` — extra
+  signals Android/Chrome use to decide how "installed" the app should
+  feel. `display: "standalone"` (already correct) and your icons/colors
+  were left as-is.
+- The app now uses `100dvh` (real visible viewport height on mobile,
+  falls back to `100vh` on older browsers) instead of plain `100vh`,
+  which was letting the browser's address bar eat into the layout.
+- The top bar, floating nav, and the 🌱 "Plant something" button now pad
+  themselves with `env(safe-area-inset-*)`, so they sit clear of notches,
+  camera cutouts, and Android's gesture bar instead of crowding them.
+- `overscroll-behavior-y: none` stops the page "bouncing"/showing browser
+  chrome on overscroll, which is one of the biggest things that makes a
+  PWA feel like "a website in a box" instead of a real app.
+
+### 2. Real notifications (new file: `notify.js`)
+
+A permission flow lives in **Settings → Notifications**: tap **Enable**
+once, and the browser's own permission prompt appears. If you dismiss or
+block it, the app never re-prompts (browsers don't allow that anyway) —
+it just tells you where to re-enable it. Notifications are delivered
+through the service worker (`reg.showNotification(...)`), not a plain
+`new Notification()`, so they work even when the tab isn't focused, and
+tapping one opens Ghibli Forest straight to that day.
+
+**Be direct about what's actually guaranteed**, because this matters for
+a static, backend-free app:
+
+| Situation | Reliability |
+|---|---|
+| **A. App open** | Reliable — checked every 20s, plus instantly on reopen/focus. |
+| **B. App backgrounded** (tab/installed app still running, not force-closed) | Reliable on most browsers — timers are throttled but keep running. |
+| **C. App fully closed/killed** | **Best-effort only.** Uses the Periodic Background Sync API, which only exists on Chrome-based browsers on Android, only for an installed PWA, and only once Chrome decides you've engaged with the app enough (its own internal heuristic — there's no toggle for this). iOS Safari, Firefox, and desktop Chrome don't support it at all, so on those, a reminder only fires once you actually reopen the app (at which point it catches up immediately, so nothing is silently lost). |
+
+**Why not just fix C properly:** truly reliable delivery to a fully
+closed app requires **Web Push** — the browser's OS-level push service
+(FCM/APNs under the hood) waking the service worker even when nothing is
+running. That needs a small server that holds a push subscription per
+device and sends it a payload at the right time (or a third-party push
+relay). That's a real backend, which you asked to avoid, and it's also
+the only architecture that can guarantee tier C — nothing purely
+client-side can. Periodic Background Sync above is the closest
+approximation GitHub Pages allows without one. If you ever do want true
+guaranteed background delivery, the smallest version of that backend
+would be: one small server (even a free-tier serverless function) that
+stores `{subscription, reminderTime}` and calls the Push API at the
+right time — everything else in this app stays exactly the same.
+
+Technical note: the service worker can't read `localStorage` (it's
+page-only), so `notify.js` mirrors your reminders into IndexedDB
+whenever one is added or checked, and the service worker reads *that*
+during a background sync — it never touches your `localStorage` data
+directly, and your reminders array in `localStorage` stays the single
+source of truth (IndexedDB is just a read mirror for the SW).
+
 ## Editing later
 
 Everything is one small file per concern, so most changes only touch one
